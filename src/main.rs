@@ -7,7 +7,7 @@ use std::path::Path;
 mod argparse;
 mod help;
 
-use argparse::parse_args;
+use argparse::{ parse_args, flag_set };
 use help::default_help_msg;
 
 enum ExitReason {
@@ -31,12 +31,12 @@ macro_rules! unwrap {
     };
 }
 
-fn main() -> Result<(), String> {
-    println!("Hello, world!\n");
+const APP_VER: &str = "0.0.1";
 
+fn main() -> Result<(), String> {
     let argv = env::args().collect::<Vec<String>>();
     let argc = argv.len();
-    let mut options = HashMap::<String, String>::new();
+    let mut opts = HashMap::<String, String>::new();
     let mut args = Vec::<String>::new();
     let filename = Path::new(&argv[0])
         .file_name()
@@ -47,7 +47,13 @@ fn main() -> Result<(), String> {
         default_help_msg(filename);
         return Ok(());
     }
-    unwrap!(parse_args(argv, &mut options, &mut args));
+    unwrap!(parse_args(argv, &mut opts, &mut args));
+
+    if flag_set(&opts, "version") {
+        println!("{}", APP_VER);
+        return Ok(());
+    }
+
 
     return Ok(());
 }

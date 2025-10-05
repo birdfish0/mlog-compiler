@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use crate::ExitReason;
 
-pub fn flag_set(opts: HashMap<String, String>, id: &str) -> bool {
+pub fn flag_set(opts: &HashMap<String, String>, id: &str) -> bool {
     opts.contains_key(id)
 }
 
