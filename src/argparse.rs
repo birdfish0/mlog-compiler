@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use crate::ExitReason;
 
-pub fn flag_set(opts: &mut HashMap<String, String>, id: &str) -> bool {
+pub fn flag_set(opts: HashMap<String, String>, id: &str) -> bool {
     opts.contains_key(id)
 }
 
@@ -67,6 +67,7 @@ pub fn parse_args(
                 match argname {
                     "out-file" | "O" => opt_with_arg!("out-file"),
                     "no-warn" | "W" => opt_no_arg!("no-warn"),
+                    "version" | "v" => opt_no_arg!("version"),
                     _ => {
                         return Err((
                             format!("Unknown option \"{}\".\nRun without arguments for the help page.", argname_dsp),
