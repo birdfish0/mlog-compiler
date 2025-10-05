@@ -5,6 +5,11 @@ pub fn run_command(
     args: &Vec<String>,
     opts: &HashMap<String, String>
 ) -> Result<(), (String, ExitReason)> {
+    let filename = Path::new(&args[0])
+        .file_name()
+        .unwrap_or(&OsStr::new("HOW-DID-YOU-EXECUTE-A-DIRECTORY"))
+        .to_str()
+        .unwrap_or("INVALID-FILE-NAME");
     match args[1].as_str() {
         "version" => {
             println!("{}", APP_VER);
@@ -12,11 +17,6 @@ pub fn run_command(
         }
         _ => {
             if exists(&args[1]).unwrap_or_else(|_| { false }) {
-                let filename = Path::new(&args[0])
-                    .file_name()
-                    .unwrap_or(&OsStr::new("HOW-DID-YOU-EXECUTE-A-DIRECTORY"))
-                    .to_str()
-                    .unwrap_or("INVALID-FILE-NAME");
                 return Err((
                     format!(
                         "Unknown command \"{}\". Did you mean \"{} compile {}\"?",
