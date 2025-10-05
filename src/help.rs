@@ -19,7 +19,18 @@ Commands:                                                                 -
                                 about the provided command or option if one
                                 is provided. Options should be placed after
                                 a backslash, for example: \"help \\--no-warn\"
-                                ",
+
+    version                     Print the version of the program, and quit.
+                                Will ignore other commands or options used.
+
+Options:
+    --version                   Print the version of the program, and quit.
+        -v                      Will ignore other commands or options used.
+
+    --no-warn                   Disables output of warnings when compiling.
+        -W
+
+",
         filename,
         filename,
         filename,
