@@ -6,15 +6,18 @@ use std::path::Path;
 
 mod argparse;
 mod help;
+mod commands;
 
 use argparse::{ parse_args, flag_set };
 use help::default_help_msg;
+use commands::run_command;
 
 enum ExitReason {
     #[allow(dead_code)]
     OK,
     UnknownOption,
     ExpectedInputArgument,
+    UnknownCommand,
 }
 
 macro_rules! unwrap {
@@ -54,6 +57,7 @@ fn main() -> Result<(), String> {
         return Ok(());
     }
 
+    unwrap!(run_command(&args, &opts));
 
     return Ok(());
 }
