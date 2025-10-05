@@ -1,11 +1,12 @@
 pub fn default_help_msg(filename: &str) {
     println!(
-        "Usage: {} [COMMAND] [OPTIONS] [args]
-       {} [OPTIONS] [COMMAND] [args]
-       {} [COMMAND] [args] [OPTIONS]
-       {} [COMMAND]        [OPTIONS]
-       {} [OPTIONS]        [COMMAND]
-       {}                  [COMMAND]
+        "Usage:                                                                    -
+    {} [COMMAND] [OPTIONS] [args]
+    {} [OPTIONS] [COMMAND] [args]
+    {} [COMMAND] [args] [OPTIONS]
+    {} [COMMAND]        [OPTIONS]
+    {} [OPTIONS]        [COMMAND]
+    {}                  [COMMAND]
 
 Commands:                                                                 -
     compile [file path]         Compile the file using default options from
