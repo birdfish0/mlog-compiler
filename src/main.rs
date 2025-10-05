@@ -16,7 +16,7 @@ enum ExitReason {
     #[allow(dead_code)]
     OK,
     UnknownOption,
-    ExpectedInputArgument,
+    OptionExpectedInputArgument,
     UnknownCommand,
 }
 

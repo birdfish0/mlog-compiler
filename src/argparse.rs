@@ -38,7 +38,7 @@ pub fn parse_args(
                 );
                 let expected_input_arg = Err((
                     format!("Option \"{}\" expected an input argument but got none.\nRun without arguments for the help page.", argname_dsp),
-                    ExitReason::ExpectedInputArgument,
+                    ExitReason::OptionExpectedInputArgument,
                 ));
 
                 let longhand;
