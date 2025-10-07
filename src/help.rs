@@ -23,12 +23,22 @@ Commands:                                                                 -
     version                     Print the version of the program, and quit.
                                 Will ignore other commands or options used.
 
-Options:
+Options:                                                                  -
     --version                   Print the version of the program, and quit.
-        -v                      Will ignore other commands or options used.
+        -V                      Will ignore other commands or options used.
 
     --no-warn                   Disables output of warnings when compiling.
         -W
+
+    --soft-silent               Disables all stdout output from the program
+        -S                      excluding error messages needing attention.
+
+    --silent                    Disables all stdout output from the program
+        -s                      except for output from the --version option
+                                and the equivalent \"[...] version\" command.
+
+    --verbose                   Makes the program output [ INFO ] level log
+        -v                      entries to aid making detailed bug reports.
 
 ",
         filename,

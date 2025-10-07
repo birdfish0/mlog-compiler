@@ -41,7 +41,7 @@ macro_rules! info {
 #[macro_export]
 macro_rules! ok {
     ($($params:tt)*) => {
-        if crate::flag_set(opts!(), "verbose") {
+        if !crate::flag_set(opts!(), "soft-silent") {
             log!("[1;32m", "OK", $($params)*);
         }
     };

@@ -67,7 +67,10 @@ pub fn parse_args(
                 match argname {
                     "out-file" | "O" => opt_with_arg!("out-file"),
                     "no-warn" | "W" => opt_no_arg!("no-warn"),
-                    "version" | "v" => opt_no_arg!("version"),
+                    "version" | "V" => opt_no_arg!("version"),
+                    "silent" | "s" => opt_no_arg!("silent"),
+                    "soft-silent" | "S" => opt_no_arg!("soft-silent"),
+                    "verbose" | "v" => opt_no_arg!("verbose"),
                     _ => {
                         return Err((
                             format!("Unknown option \"{}\".\nRun without arguments for the help page.", argname_dsp),
