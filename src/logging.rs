@@ -25,7 +25,7 @@ macro_rules! log {
 #[macro_export]
 macro_rules! debug {
     ($($params:tt)*) => {
-        log!("[0;35", "DEBUG", $($params)*);
+        log!("[1;35m", "DEBUG", $($params)*);
     };
 }
 
@@ -33,7 +33,7 @@ macro_rules! debug {
 macro_rules! info {
     ($($params:tt)*) => {
         if crate::flag_set(opts!(), "verbose") {
-            log!("[0;36", "INFO", $($params)*);
+            log!("[1;36m", "INFO", $($params)*);
         }
     };
 }
@@ -42,7 +42,7 @@ macro_rules! info {
 macro_rules! ok {
     ($($params:tt)*) => {
         if crate::flag_set(opts!(), "verbose") {
-            log!("[0;32", "OK", $($params)*);
+            log!("[1;32m", "OK", $($params)*);
         }
     };
 }
@@ -51,7 +51,7 @@ macro_rules! ok {
 macro_rules! warn {
     ($($params:tt)*) => {
         if !crate::flag_set(opts!(), "soft-silent") {
-            log!("[0;33", "WARN", $($params)*);
+            log!("[1;33m", "WARN", $($params)*);
         }
     };
 }
@@ -59,6 +59,6 @@ macro_rules! warn {
 #[macro_export]
 macro_rules! err {
     ($($params:tt)*) => {
-        log!("[0;31", "ERROR", $($params)*);
+        log!("[1;31m", "ERROR", $($params)*);
     };
 }
