@@ -7,6 +7,7 @@ use std::path::Path;
 mod argparse;
 mod help;
 mod commands;
+mod logging;
 
 use argparse::{ parse_args, flag_set };
 use help::default_help_msg;
@@ -20,6 +21,7 @@ enum ExitReason {
     UnknownCommand,
 }
 
+#[macro_export]
 macro_rules! unwrap {
     ($e:expr) => {
         match $e {
@@ -28,6 +30,8 @@ macro_rules! unwrap {
                 let er = tuple.0;
                 let exit_code = tuple.1 as i32;
                 println!("{}\nExit code: {}", er, exit_code);
+                err!("{}", er);
+                err!("Exit code: {}", exit_code);
                 exit(exit_code)
             },
         }
@@ -40,6 +44,13 @@ fn main() -> Result<(), String> {
     let argv = env::args().collect::<Vec<String>>();
     let argc = argv.len();
     let mut opts = HashMap::<String, String>::new();
+
+    macro_rules! opts {
+        () => {
+            &opts
+        };
+    }
+
     let mut args = Vec::<String>::new();
     let filename = Path::new(&argv[0])
         .file_name()
