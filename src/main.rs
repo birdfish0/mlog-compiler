@@ -7,6 +7,8 @@ use std::path::Path;
 mod argparse;
 mod help;
 mod commands;
+mod tokenize;
+mod compile;
 mod logging;
 
 use argparse::{ parse_args, flag_set };
@@ -19,6 +21,8 @@ enum ExitReason {
     UnknownOption,
     OptionExpectedInputArgument,
     UnknownCommand,
+    CompileFileNotFound,
+    CommandExpectedInputArgument,
 }
 
 #[macro_export]
@@ -29,7 +33,6 @@ macro_rules! unwrap {
             Err(tuple) => {
                 let er = tuple.0;
                 let exit_code = tuple.1 as i32;
-                println!("{}\nExit code: {}", er, exit_code);
                 err!("{}", er);
                 err!("Exit code: {}", exit_code);
                 exit(exit_code)
@@ -57,11 +60,11 @@ fn main() -> Result<(), String> {
         .unwrap_or(&OsStr::new("HOW-DID-YOU-EXECUTE-A-DIRECTORY"))
         .to_str()
         .unwrap_or("INVALID-FILE-NAME");
-    if argc == 1 {
+    unwrap!(parse_args(argv.clone(), &mut opts, &mut args));
+    if args.len() == 1 {
         default_help_msg(filename);
         return Ok(());
     }
-    unwrap!(parse_args(argv, &mut opts, &mut args));
 
     if flag_set(&opts, "version") {
         println!("{}", APP_VER);

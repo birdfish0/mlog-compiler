@@ -1,10 +1,16 @@
 use std::{ collections::HashMap, ffi::OsStr, fs::exists, path::Path };
-use crate::{ ExitReason, APP_VER };
+use crate::{ ExitReason, APP_VER, unwrap, compile };
 
 pub fn run_command(
     args: &Vec<String>,
     opts: &HashMap<String, String>
 ) -> Result<(), (String, ExitReason)> {
+    macro_rules! opts {
+        () => {
+            &opts
+        };
+    }
+
     let filename = Path::new(&args[0])
         .file_name()
         .unwrap_or(&OsStr::new("HOW-DID-YOU-EXECUTE-A-DIRECTORY"))
@@ -13,8 +19,9 @@ pub fn run_command(
     match args[1].as_str() {
         "version" => {
             println!("{}", APP_VER);
-            return Ok(());
+            Ok(())
         }
+        "compile" => { compile::compile(args, opts) }
         _ => {
             if exists(&args[1]).unwrap_or_else(|_| { false }) {
                 return Err((
