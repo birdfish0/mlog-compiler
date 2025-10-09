@@ -2,12 +2,13 @@ use std::fmt::Display;
 
 pub struct Token {
     pub content: String,
-    pub line: i32,
+    pub line: i64,
+    pub col: i64,
 }
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "<Token \"{}\" l{}>", self.content, self.line)
+        write!(f, "<Token \"{}\" {}:{}>", self.content, self.line, self.col)
     }
 }
 
@@ -63,6 +64,7 @@ pub fn tokenize(file: String) -> Vec<Token> {
     let mut instr = false;
     let mut intok = false;
     let mut line = 1;
+    let mut col = -1;
     macro_rules! flush_token {
         () => {
             if left != right - 1 {
@@ -71,13 +73,15 @@ pub fn tokenize(file: String) -> Vec<Token> {
                         .split_at(left)
                         .1.split_at(right - left - 1)
                         .0.to_string(),
-                    line
+                    line,
+                    col
                 });
             }
         };
     }
     while let Some(ch) = chars.next() {
         right += 1;
+        col += 1;
 
         if ch == '\\' {
             intok = !intok;
@@ -97,10 +101,12 @@ pub fn tokenize(file: String) -> Vec<Token> {
             tokens.push(Token {
                 content: ch.to_string(),
                 line,
+                col: col + 1,
             });
             left = right;
         }
         if ch == '\n' {
+            col = -1;
             line += 1;
         }
     }
