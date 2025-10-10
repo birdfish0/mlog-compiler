@@ -1,14 +1,41 @@
 use std::fmt::Display;
 
+#[derive(PartialEq)]
+pub enum StringType {
+    Not,
+    String,
+    Char,
+    Backtick,
+}
+
 pub struct Token {
     pub content: String,
     pub line: i64,
     pub col: i64,
+    pub strtype: StringType,
+}
+
+impl Default for Token {
+    fn default() -> Self {
+        Token { content: "".to_string(), line: 0, col: 0, strtype: StringType::Not }
+    }
 }
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "<Token \"{}\" {}:{}>", self.content, self.line, self.col)
+        write!(
+            f,
+            "<Token {}\"{}\" {}:{}>",
+            match self.strtype {
+                StringType::Not => { "" }
+                StringType::Backtick => { "b" }
+                StringType::String => { "s" }
+                StringType::Char => { "c" }
+            },
+            self.content,
+            self.line,
+            self.col
+        )
     }
 }
 
@@ -42,7 +69,40 @@ pub fn tokenize(file: String) -> Vec<Token> {
         '>',
         '~',
     ];
-    let string_specifiers = ['\"', '`'];
+    let multi_puncs = [
+        "==",
+        "--",
+        "++",
+        "===",
+        "||",
+        "&&",
+        "//",
+        ">>",
+        ">>>",
+        "<<",
+        ">=",
+        "<=",
+        "!=",
+        "!==",
+        "%%",
+        "*=",
+        "/=",
+        "//=",
+        "+=",
+        "-=",
+        "^=",
+        "~=",
+        "<<=",
+        ">>=",
+        ">>>=",
+        "|=",
+        "&=",
+        "||=",
+        "&&=",
+        "%%=",
+        "..",
+    ];
+    let string_specifiers = ['\"', '\'', '`'];
     let whitespace = [
         ' ',
         '\t',
@@ -61,55 +121,137 @@ pub fn tokenize(file: String) -> Vec<Token> {
     let mut right = 0;
     let file = file + " ";
     let mut chars = file.chars().peekable();
-    let mut instr = false;
+    let charidx = file.char_indices().collect::<Vec<_>>();
+    let mut instr = StringType::Not;
+    let mut strescape = false;
     let mut intok = false;
     let mut line = 1;
     let mut col = -1;
     macro_rules! flush_token {
         () => {
             if left != right - 1 {
+                let macro_str = file
+                                    .split_at(i!(left))
+                                    .1.split_at(i!(right - 1) - i!(left))
+                                    .0.to_string();
                 tokens.push(Token {
-                    content: file
-                        .split_at(left)
-                        .1.split_at(right - left - 1)
-                        .0.to_string(),
-                    line,
-                    col
-                });
+                    content: macro_str,
+                        line,
+                        col,
+                        ..Default::default()
+                    });
             }
+            left = right;
+        };
+    }
+    let nopunc_tok = Token {
+        content: "ERR".to_string(),
+        ..Default::default()
+    };
+    macro_rules! i {
+        ($idx:expr) => {
+            charidx[$idx].0
+        };
+    }
+    let ch: char = '\0';
+    macro_rules! cont {
+        () => {
+            if ch == '\n' {
+                col = -1;
+                line += 1;
+            }
+            continue;
         };
     }
     while let Some(ch) = chars.next() {
         right += 1;
         col += 1;
 
+        if instr != StringType::Not && strescape {
+            strescape = false;
+            cont!();
+        }
+        if string_specifiers.contains(&ch) {
+            instr = match (&instr, ch) {
+                (StringType::Not, '\'') => StringType::Char,
+                (StringType::Not, '\"') => StringType::String,
+                (StringType::Not, '`') => StringType::Backtick,
+                (StringType::Char, '\'') => StringType::Not,
+                (StringType::String, '\"') => StringType::Not,
+                (StringType::Backtick, '`') => StringType::Not,
+                _ => instr,
+            };
+            if instr == StringType::Not {
+                if left != right - 1 {
+                    let macro_str = file
+                        .split_at(i!(left))
+                        .1.split_at(i!(right - 1) - i!(left))
+                        .0.to_string();
+                    tokens.push(Token {
+                        content: macro_str,
+                        line,
+                        col,
+                        strtype: match ch {
+                            '\'' => StringType::Char,
+                            '\"' => StringType::String,
+                            '`' => StringType::Backtick,
+                            _ => StringType::Not,
+                        },
+                    });
+                }
+                left = right;
+            } else {
+                flush_token!();
+            }
+        }
+        if instr != StringType::Not {
+            if ch == '\\' {
+                strescape = true;
+            }
+            cont!();
+        }
         if ch == '\\' {
             intok = !intok;
             flush_token!();
-            left = right;
             continue;
         }
         if intok {
-            continue;
+            cont!();
         }
 
         if whitespace.contains(&ch) {
             flush_token!();
-            left = right;
         } else if punctuation.contains(&ch) {
-            flush_token!();
-            tokens.push(Token {
-                content: ch.to_string(),
-                line,
-                col: col + 1,
-            });
-            left = right;
+            let lastpunc = tokens.last().unwrap_or(&nopunc_tok);
+            let filtered = multi_puncs
+                .iter()
+                .filter(
+                    |x|
+                        x.starts_with(&lastpunc.content) &&
+                        x.chars().nth(lastpunc.content.len()) == Some(ch)
+                )
+                .collect::<Vec<_>>();
+            if filtered.len() > 0 {
+                let new_token = Token {
+                    line,
+                    col,
+                    content: lastpunc.content.clone() + ch.to_string().as_str(),
+                    ..Default::default()
+                };
+                _ = tokens.pop();
+                tokens.push(new_token);
+                left = right;
+            } else {
+                flush_token!();
+                tokens.push(Token {
+                    content: ch.to_string(),
+                    line,
+                    col: col + 1,
+                    ..Default::default()
+                });
+            }
         }
-        if ch == '\n' {
-            col = -1;
-            line += 1;
-        }
+        cont!();
     }
-    println!("");
     return tokens;
 }
