@@ -78,7 +78,7 @@ pub fn parse_args(
                         ));
                     }
                 }
-                out_opts.insert(longhand.to_string(), value.to_string());
+                out_opts.insert(longhand.to_string(), value);
             }
         } else if arg.starts_with("\\") {
             out_args.push(arg.split_at(1).1.to_string());
