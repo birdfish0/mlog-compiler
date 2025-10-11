@@ -61,13 +61,14 @@ fn main() -> Result<(), String> {
         .to_str()
         .unwrap_or("INVALID-FILE-NAME");
     unwrap!(parse_args(argv.clone(), &mut opts, &mut args));
-    if args.len() == 1 {
-        default_help_msg(filename);
-        return Ok(());
-    }
 
     if flag_set(&opts, "version") {
         println!("{}", APP_VER);
+        return Ok(());
+    }
+
+    if args.len() == 1 {
+        default_help_msg(filename);
         return Ok(());
     }
 
