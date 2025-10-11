@@ -11,7 +11,7 @@ macro_rules! log {
             let e_logger_msg = format!("{}", format!($($params)*));
             if (e_logger_msg.contains("\n")) {
                 for e_logger_line in e_logger_msg.split("\n") {
-                    let e_logger_line = e_logger_line.strip_prefix("\r").unwrap_or_else(||e_logger_line);
+                    let e_logger_line = e_logger_line.strip_prefix("\r").unwrap_or(e_logger_line);
                     println!("[{}{} {} {}[0m]: {}", crate::logging::ESCAPE, $color, $decoration, crate::logging::ESCAPE, e_logger_line);
                 }
             }

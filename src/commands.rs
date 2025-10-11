@@ -23,7 +23,7 @@ pub fn run_command(
         }
         "compile" => { compile::compile(args, opts) }
         _ => {
-            if exists(&args[1]).unwrap_or_else(|_| { false }) {
+            if exists(&args[1]).unwrap_or(false) {
                 return Err((
                     format!(
                         "Unknown command \"{}\". Did you mean \"{} compile {}\"?",
