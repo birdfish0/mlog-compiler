@@ -45,7 +45,6 @@ const APP_VER: &str = "0.0.1";
 
 fn main() -> Result<(), String> {
     let argv = env::args().collect::<Vec<String>>();
-    let argc = argv.len();
     let mut opts = HashMap::<String, String>::new();
 
     macro_rules! opts {
