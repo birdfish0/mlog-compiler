@@ -21,3 +21,5 @@ target
 #.idea/
 
 pat
+test-simple.txt
+test-src.txt
