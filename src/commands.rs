@@ -1,5 +1,5 @@
 use std::{ collections::HashMap, ffi::OsStr, fs::exists, path::Path };
-use crate::{ ExitReason, APP_VER, unwrap, compile };
+use crate::*;
 
 pub fn run_command(
     args: &Vec<String>,
@@ -16,6 +16,7 @@ pub fn run_command(
         .unwrap_or(&OsStr::new("HOW-DID-YOU-EXECUTE-A-DIRECTORY"))
         .to_str()
         .unwrap_or("INVALID-FILE-NAME");
+    info!("Executing command [{}]", args[1].as_str());
     match args[1].as_str() {
         "version" => {
             println!("{}", APP_VER);
