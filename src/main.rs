@@ -23,6 +23,8 @@ enum ExitReason {
     UnknownCommand,
     CompileFileNotFound,
     CommandExpectedInputArgument,
+    CompileCharTooLong,
+    CompileBadTokenAfterIdentifier,
 }
 
 #[macro_export]
