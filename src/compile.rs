@@ -6,6 +6,12 @@ pub fn compile(
     args: &Vec<String>,
     opts: &HashMap<String, String>
 ) -> Result<(), (String, ExitReason)> {
+    macro_rules! opts {
+        () => {
+            &opts
+        };
+    }
+
     if args.len() < 3 {
         return Err((
             "Command \"compile\" expected 1 argument. 0 were provided.".to_string(),
