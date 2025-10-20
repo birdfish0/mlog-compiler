@@ -22,11 +22,6 @@ impl Default for Inst {
     }
 }
 
-enum State {
-    None,
-    PrevIsIdentifier,
-}
-
 struct CodeBlock {
     isi: bool, // Is Instruction
     c: Option<Vec<CodeBlock>>, // Code collection or smth idk
@@ -45,6 +40,11 @@ impl CodeBlock {
     }
 }
 
+enum State {
+    None,
+    PrevIsIdentifier,
+}
+
 fn parse_tokens(tokens:Vec<Token>, opts:&HashMap<String, String>) -> Result<CodeBlock, (String, ExitReason)> {
     macro_rules! opts {
         () => {
@@ -57,12 +57,13 @@ fn parse_tokens(tokens:Vec<Token>, opts:&HashMap<String, String>) -> Result<Code
         };
     }
 
+    let nonestr = "None".to_string();
+
     let mut insts = CodeBlock::new_block();
     let mut state = State::None;
     let mut inst_wip = Inst::default();
-    let nonestr = "None".to_string();
-    // let mut itokens = tokens.into_iter().peekable();
-    for token in &tokens {
+    let mut itokens = tokens.into_iter().peekable();
+    while let Some(token) = itokens.next() {
         info!("{}, ", token);
         match state {
             State::None => {
