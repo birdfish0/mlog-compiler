@@ -4,48 +4,52 @@ use std::fs::read_to_string;
 use crate::tokenize::{StringType, Token};
 use crate::*;
 
-enum InstType {
-    Stop,
+enum ValType {
     Nop,
+    Ident,
     FuncCall,
     MacroCall,
 }
 
-struct Inst {
-    pub t: InstType,
+struct Val {
+    pub t: ValType,
     pub ident: Option<String>,
+    pub left: Option<Box<Val>>,
+    pub right: Option<Box<Val>>,
+    pub args: Option<Vec<Val>>,
 }
 
-impl Default for Inst {
+impl Default for Val {
     fn default() -> Self {
-        Inst { t: InstType::Nop, ident: None }
+        Val { t: ValType::Nop, ident: None, left: None, right: None, args: None, }
     }
 }
 
 struct CodeBlock {
-    isi: bool, // Is Instruction
+    isv: bool, // Is Value
     c: Option<Vec<CodeBlock>>, // Code collection or smth idk
-    i: Option<Inst>, // Instruction
+    v: Option<Val>, // Value
 }
 
 impl CodeBlock {
     pub fn new_block() -> Self {
-        Self { isi: false, c: Some(Vec::<CodeBlock>::new()), i: None }
+        Self { isv: false, c: Some(Vec::<CodeBlock>::new()), v: None }
     }
-    pub fn new_inst() -> Self {
-        Self {isi:true, c:None, i: Some(Inst::default())}
+    pub fn new_val() -> Self {
+        Self {isv:true, c:None, v: Some(Val::default())}
     }
-    pub fn new_inst_from(inst:Inst) -> Self {
-        Self {isi:true, c:None, i: Some(inst)}
+    pub fn new_val_from(val:Val) -> CodeBlock {
+        CodeBlock {isv:true, c:None, v: Some(val)}
     }
 }
 
 enum State {
     None,
     PrevIsIdentifier,
+    ParseArgs,
 }
 
-fn parse_tokens(tokens:Vec<Token>, opts:&HashMap<String, String>) -> Result<CodeBlock, (String, ExitReason)> {
+fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>) -> Result<CodeBlock, (String, ExitReason)> {
     macro_rules! opts {
         () => {
             &opts
@@ -59,10 +63,12 @@ fn parse_tokens(tokens:Vec<Token>, opts:&HashMap<String, String>) -> Result<Code
 
     let nonestr = "None".to_string();
 
-    let mut insts = CodeBlock::new_block();
+    let mut cblock = CodeBlock::new_block();
     let mut state = State::None;
-    let mut inst_wip = Inst::default();
+    let mut val_wip = Val::default();
     let mut itokens = tokens.into_iter().peekable();
+    let mut parenthesis_depth = 0;
+    let mut buffer = Vec::<&Token>::new();
     while let Some(token) = itokens.next() {
         info!("{}, ", token);
         match state {
@@ -70,14 +76,17 @@ fn parse_tokens(tokens:Vec<Token>, opts:&HashMap<String, String>) -> Result<Code
                 match token.content.as_str() {
                     _ => {
                         state = State::PrevIsIdentifier;
-                        inst_wip.ident = Some(token.content.clone());
+                        val_wip.left = Some(Box::new(Val { t: ValType::Ident, ident: Some(token.content.clone()), ..Default::default() }));
                     }
                 }
             }
             State::PrevIsIdentifier => {
                 match token.content.as_str() {
                     "(" => {
-                        inst_wip.t = InstType::FuncCall;
+                        val_wip.t = ValType::FuncCall;
+                        val_wip.args = Some(Vec::<Val>::new());
+                        state = State::ParseArgs;
+                        parenthesis_depth = 1;
                     }
                     _ => {
                         return Err((
@@ -88,7 +97,7 @@ fn parse_tokens(tokens:Vec<Token>, opts:&HashMap<String, String>) -> Result<Code
                                     _ => "string ",
                                 },
                                 token.content,
-                                inst_wip.ident.unwrap_or(nonestr),
+                                match val_wip.left { Some(x) => x.ident.unwrap_or(nonestr), None => nonestr},
                                 pos!(token)
                             ),
                             ExitReason::CompileBadTokenAfterIdentifier,
@@ -96,7 +105,43 @@ fn parse_tokens(tokens:Vec<Token>, opts:&HashMap<String, String>) -> Result<Code
                     }
                 }
             }
-            _ => {}
+            State::ParseArgs => {
+                match token.content.as_str() {
+                    "(" => {
+                        parenthesis_depth += 1;
+                    }
+                    ")" => {
+                        parenthesis_depth -= 1;
+                    }
+                    "," => {
+                        if parenthesis_depth == 1 {
+                            match val_wip.args.as_mut(){
+                                Some(v) => v,
+                                None => {
+                                    return Err(("Unwrapping val_wip.args.as_mut() failed.".to_string(), ExitReason::CompileWipArgsUnwrapFailed));
+                                }
+                            }.push(match parse_tokens(&buffer, opts){
+                                Ok(val) => {
+                                    match val.isv {
+                                        true => val.v.unwrap(),
+                                        false => {
+                                            return Err((format!("Function argument should be a value, not executable code.{}", pos!(token)), ExitReason::CompileFuncArgNotValue));
+                                        }
+                                    }
+                                },
+                                e => {
+                                    return e;
+                                }
+                            });
+                        }
+                        else {
+                            buffer.push(token);
+                        }
+                    }
+                    _ => {
+                    }
+                }
+            }
         }
         if
             token.strtype == StringType::Char &&
@@ -116,7 +161,7 @@ fn parse_tokens(tokens:Vec<Token>, opts:&HashMap<String, String>) -> Result<Code
             ));
         }
     }
-    return Ok(insts);
+    return Ok(cblock);
 }
 
 pub fn compile(
@@ -150,8 +195,8 @@ pub fn compile(
     for token in &tokens {
         debug!("{}", token);
     }
-    let tokens = match parse_tokens(tokens, opts) {
     debug!("------");
+    let tokens = match parse_tokens(&tokens.iter().collect(), opts) {
         Ok(t) => t,
         Err(e) => { return Err(e); }
     };

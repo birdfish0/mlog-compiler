@@ -25,6 +25,8 @@ enum ExitReason {
     CommandExpectedInputArgument,
     CompileCharTooLong,
     CompileBadTokenAfterIdentifier,
+    CompileWipArgsUnwrapFailed,
+    CompileFuncArgNotValue,
 }
 
 #[macro_export]
