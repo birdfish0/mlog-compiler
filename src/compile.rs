@@ -146,11 +146,12 @@ pub fn compile(
         }
     };
     let tokens = tokenize::tokenize(file);
+    debug!("------ All tokens:");
     for token in &tokens {
         debug!("{}", token);
     }
-    info!("------");
     let tokens = match parse_tokens(tokens, opts) {
+    debug!("------");
         Ok(t) => t,
         Err(e) => { return Err(e); }
     };
