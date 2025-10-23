@@ -71,6 +71,7 @@ pub fn parse_args(
                     "silent" | "s" => opt_no_arg!("silent"),
                     "soft-silent" | "S" => opt_no_arg!("soft-silent"),
                     "verbose" | "v" => opt_no_arg!("verbose"),
+                    "debug" => opt_no_arg!("debug"),
                     _ => {
                         return Err((
                             format!("Unknown option \"{}\".\nRun without arguments for the help page.", argname_dsp),

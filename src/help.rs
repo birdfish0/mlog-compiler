@@ -40,6 +40,10 @@ Options:                                                                  -
     --verbose                   Makes the program output [ INFO ] level log
         -v                      entries to aid making detailed bug reports.
 
+    --debug                     Make the program output log messages at the
+                                [ DEBUG ] level. Be aware: this will likely
+                                generate large amounts of output to stdout.
+
 ",
         filename,
         filename,

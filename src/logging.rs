@@ -25,7 +25,9 @@ macro_rules! log {
 #[macro_export]
 macro_rules! debug {
     ($($params:tt)*) => {
-        log!("[1;35m", "DEBUG", $($params)*);
+        if crate::flag_set(opts!(), "debug") {
+            log!("[1;35m", "DEBUG", $($params)*);
+        }
     };
 }
 
