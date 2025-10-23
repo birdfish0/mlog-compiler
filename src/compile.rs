@@ -4,11 +4,13 @@ use std::fs::read_to_string;
 use crate::tokenize::{StringType, Token};
 use crate::*;
 
+#[derive(Debug)]
 enum ValType {
     Nop,
     Ident,
     FuncCall,
     MacroCall,
+    CodeBlock,
 }
 
 struct Val {
@@ -25,31 +27,13 @@ impl Default for Val {
     }
 }
 
-struct CodeBlock {
-    isv: bool, // Is Value
-    c: Option<Vec<CodeBlock>>, // Code collection or smth idk
-    v: Option<Val>, // Value
-}
-
-impl CodeBlock {
-    pub fn new_block() -> Self {
-        Self { isv: false, c: Some(Vec::<CodeBlock>::new()), v: None }
-    }
-    pub fn new_val() -> Self {
-        Self {isv:true, c:None, v: Some(Val::default())}
-    }
-    pub fn new_val_from(val:Val) -> CodeBlock {
-        CodeBlock {isv:true, c:None, v: Some(val)}
-    }
-}
-
 enum State {
     None,
     PrevIsIdentifier,
     ParseArgs,
 }
 
-fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>) -> Result<CodeBlock, (String, ExitReason)> {
+fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>) -> Result<Val, (String, ExitReason)> {
     macro_rules! opts {
         () => {
             &opts
@@ -63,14 +47,14 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>) -> Result<Co
 
     let nonestr = "None".to_string();
 
-    let mut cblock = CodeBlock::new_block();
+    let mut cblock = Val { t: ValType::CodeBlock, args: Some(Vec::<Val>::new()), ..Default::default() };
     let mut state = State::None;
     let mut val_wip = Val::default();
     let mut itokens = tokens.into_iter().peekable();
     let mut parenthesis_depth = 0;
     let mut buffer = Vec::<&Token>::new();
     while let Some(token) = itokens.next() {
-        info!("{}, ", token);
+        debug!("Processing {}, ", token);
         match state {
             State::None => {
                 match token.content.as_str() {
@@ -122,11 +106,11 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>) -> Result<Co
                                 }
                             }.push(match parse_tokens(&buffer, opts){
                                 Ok(val) => {
-                                    match val.isv {
-                                        true => val.v.unwrap(),
-                                        false => {
+                                    match val.t {
+                                        ValType::CodeBlock => {
                                             return Err((format!("Function argument should be a value, not executable code.{}", pos!(token)), ExitReason::CompileFuncArgNotValue));
-                                        }
+                                        },
+                                        _ => val
                                     }
                                 },
                                 e => {
@@ -140,6 +124,9 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>) -> Result<Co
                     }
                     _ => {
                     }
+                }
+                if parenthesis_depth == 0 {
+                    state = State::None;
                 }
             }
         }
