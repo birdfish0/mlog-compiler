@@ -10,8 +10,8 @@ pub enum StringType {
 
 pub struct Token {
     pub content: String,
-    pub line: i64,
-    pub col: i64,
+    pub line: u64,
+    pub col: u64,
     pub strtype: StringType,
 }
 
