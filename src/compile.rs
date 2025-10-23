@@ -50,6 +50,7 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>) -> Result<Va
     let mut cblock = Val { t: ValType::CodeBlock, args: Some(Vec::<Val>::new()), ..Default::default() };
     let mut state = State::None;
     let mut val_wip = Val::default();
+    let mut val_isnew = true;
     let mut itokens = tokens.into_iter().peekable();
     let mut parenthesis_depth = 0;
     let mut buffer = Vec::<&Token>::new();
@@ -58,8 +59,14 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>) -> Result<Va
         match state {
             State::None => {
                 match token.content.as_str() {
+                    ";" => {
+                        cblock.args.as_mut().unwrap(/* safe unwrap */).push(val_wip);
+                        val_wip = Val::default();
+                        val_isnew = true;
+                    }
                     _ => {
                         state = State::PrevIsIdentifier;
+                        val_isnew = false;
                         val_wip.left = Some(Box::new(Val { t: ValType::Ident, ident: Some(token.content.clone()), ..Default::default() }));
                     }
                 }
@@ -147,6 +154,9 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>) -> Result<Va
                 ExitReason::CompileCharTooLong,
             ));
         }
+    }
+    if !val_isnew {
+        return Err((format!("Missing semicolon.{}", pos!(tokens.last().unwrap_or(&&Token::default()))), ExitReason::CompileMissingEndingSemicolon));
     }
     return Ok(cblock);
 }

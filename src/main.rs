@@ -27,6 +27,7 @@ enum ExitReason {
     CompileBadTokenAfterIdentifier,
     CompileWipArgsUnwrapFailed,
     CompileFuncArgNotValue,
+    CompileMissingEndingSemicolon,
 }
 
 #[macro_export]
