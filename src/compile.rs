@@ -176,6 +176,7 @@ pub fn compile(
             ExitReason::CommandExpectedInputArgument,
         ));
     }
+    info!("Reading file");
     let file = match read_to_string(&args[2]) {
         Ok(f) => f,
         Err(e) => {
@@ -187,7 +188,10 @@ pub fn compile(
             }
         }
     };
+    info!("File read success");
+    info!("Begin tokenize");
     let tokens = tokenize::tokenize(file);
+    info!("Tokenize success");
     debug!("------ All tokens:");
     for token in &tokens {
         debug!("{}", token);
