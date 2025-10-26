@@ -126,7 +126,7 @@ pub fn tokenize(file: String) -> Vec<Token> {
     let mut strescape = false;
     let mut intok = false;
     let mut line = 1;
-    let mut col = -1;
+    let mut col:i128 = -1;
     macro_rules! flush_token {
         () => {
             if left != right - 1 {
@@ -137,7 +137,11 @@ pub fn tokenize(file: String) -> Vec<Token> {
                 tokens.push(Token {
                     content: macro_str,
                         line,
-                        col,
+                        col: match (col < 0, col > u64::MAX as i128) {
+                                (true, _) => 0,
+                                (_, true) => u64::MAX,
+                                _ => col as u64
+                            },
                         ..Default::default()
                     });
             }
@@ -190,7 +194,11 @@ pub fn tokenize(file: String) -> Vec<Token> {
                     tokens.push(Token {
                         content: macro_str,
                         line,
-                        col,
+                        col: match (col < 0, col > u64::MAX as i128) {
+                                (true, _) => 0,
+                                (_, true) => u64::MAX,
+                                _ => col as u64
+                            },
                         strtype: match ch {
                             '\'' => StringType::Char,
                             '\"' => StringType::String,
@@ -234,7 +242,11 @@ pub fn tokenize(file: String) -> Vec<Token> {
             if filtered.len() > 0 {
                 let new_token = Token {
                     line,
-                    col,
+                    col: match (col < 0, col > u64::MAX as i128) {
+                            (true, _) => 0,
+                            (_, true) => u64::MAX,
+                            _ => col as u64
+                        },
                     content: lastpunc.content.clone() + ch.to_string().as_str(),
                     ..Default::default()
                 };
@@ -246,7 +258,11 @@ pub fn tokenize(file: String) -> Vec<Token> {
                 tokens.push(Token {
                     content: ch.to_string(),
                     line,
-                    col: col + 1,
+                    col: match (col+1 < 0, col+1 > u64::MAX as i128) {
+                                (true, _) => 0,
+                                (_, true) => u64::MAX,
+                                _ => (col+1) as u64
+                            },
                     ..Default::default()
                 });
             }
