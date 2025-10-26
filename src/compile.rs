@@ -197,6 +197,7 @@ pub fn compile(
         debug!("{}", token);
     }
     debug!("------");
+    info!("Parse tokens (first pass)");
     let tokens = match parse_tokens(&tokens.iter().collect(), opts) {
         Ok(t) => t,
         Err(e) => { return Err(e); }
