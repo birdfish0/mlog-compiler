@@ -71,6 +71,19 @@ fn main() -> Result<(), String> {
         return Ok(());
     }
 
+    let verbose_flags = ["verbose", "debug"];
+    let vflags_set = verbose_flags.map(|f| (flag_set(&opts, f), f));
+    let silent_flags = ["silent", "soft-silent"];
+    let sflags_set = silent_flags.map(|f| (flag_set(&opts, f), f));
+    for vflag in vflags_set {
+        for sflag in sflags_set {
+            if vflag.0 && sflag.0 {
+                println!("Incompatible log level flags --{} and --{}.", vflag.1, sflag.1);
+                unwrap!(Err((format!("Incompatible log level flags --{} and --{}.", vflag.1, sflag.1), ExitReason::IncompatibleLogLevelFlags)));
+            }
+        }
+    }
+
     if args.len() == 1 {
         default_help_msg(filename);
         return Ok(());
