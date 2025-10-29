@@ -34,7 +34,7 @@ macro_rules! debug {
 #[macro_export]
 macro_rules! info {
     ($($params:tt)*) => {
-        if crate::flag_set(opts!(), "verbose") {
+        if crate::flag_set(opts!(), "verbose") || crate::flag_set(opts!(), "debug") {
             log!("[1;36m", "INFO", $($params)*);
         }
     };
