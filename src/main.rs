@@ -15,6 +15,7 @@ use argparse::{ parse_args, flag_set };
 use help::default_help_msg;
 use commands::run_command;
 
+#[derive(Debug, Copy, Clone)]
 enum ExitReason {
     #[allow(dead_code)]
     OK,
@@ -27,7 +28,7 @@ enum ExitReason {
     CompileBadTokenAfterIdentifier,
     CompileWipArgsUnwrapFailed,
     CompileFuncArgNotValue,
-    CompileMissingEndingSemicolon,
+    IncompatibleLogLevelFlags,
 }
 
 #[macro_export]
@@ -39,7 +40,7 @@ macro_rules! unwrap {
                 let er = tuple.0;
                 let exit_code = tuple.1 as i32;
                 err!("{}", er);
-                err!("Exit code: {}", exit_code);
+                err!("Exit code: {} ({:?})", exit_code, tuple.1);
                 exit(exit_code)
             },
         }
