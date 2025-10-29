@@ -29,6 +29,7 @@ enum ExitReason {
     CompileWipArgsUnwrapFailed,
     CompileFuncArgNotValue,
     IncompatibleLogLevelFlags,
+    CompileExpectedParenthesisAfterMacro,
 }
 
 #[macro_export]

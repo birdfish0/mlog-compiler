@@ -86,7 +86,7 @@ impl Display for Val {
 enum State {
     None,
     PrevIsIdentifier,
-    PrevIsConst,
+    ParseRemainder,
     ParseArgs,
 }
 
@@ -169,7 +169,7 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
                                 StringType::Char => VarType::Char,
                                 _ => VarType::Str
                             };
-                            state = State::PrevIsConst;
+                            state = State::ParseRemainder;
                         }
                         else if is_num(&token.content) {
                             val_wip.t = ValType::Const;
@@ -197,7 +197,7 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
                                     debug!("[Depth {}] Skipped {} as decimal point.", depth, maybe_dot);
                                 }
                             }
-                            state = State::PrevIsConst;
+                            state = State::ParseRemainder;
                         }
                         else {
                             val_wip.t = ValType::Ident;
@@ -213,6 +213,26 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
                         val_wip.args = Some(Vec::<Val>::new());
                         state = State::ParseArgs;
                         parenthesis_depth = 1;
+                    }
+                    "!" => {
+                        let success;
+                        if let Some(next) = tokens.get(i+1) {
+                            if next.content == "(" {
+                                success = true;
+                                val_wip.t = ValType::MacroCall;
+                                val_wip.args = Some(Vec::<Val>::new());
+                                state = State::ParseArgs;
+                                parenthesis_depth = 1;
+                                i += 1;
+                            } else {
+                                success = false;
+                            }
+                        } else {
+                            success = false;
+                        }
+                        if !success {
+                            return Err((format!("Expected '(' after macro call \"{}!\".{}", val_wip.ident.unwrap_or("None".to_string()), pos!(token)), ExitReason::CompileExpectedParenthesisAfterMacro));
+                        }
                     }
                     _ => {
                         return Err((
@@ -282,7 +302,7 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
                     buffer.clear();
                 }
             }
-            State::PrevIsConst => {
+            State::ParseRemainder => {
                 err!("not implemented");
             }
         }
