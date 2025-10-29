@@ -50,6 +50,15 @@ macro_rules! ok {
 }
 
 #[macro_export]
+macro_rules! cwarn {
+    ($($params:tt)*) => {
+        if !crate::flag_set(opts!(), "soft-silent") && !crate::flag_set(opts!(), "no-warn") {
+            log!("[1;33m", "WARN", $($params)*);
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! warn {
     ($($params:tt)*) => {
         if !crate::flag_set(opts!(), "soft-silent") {
