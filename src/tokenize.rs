@@ -167,6 +167,7 @@ pub fn tokenize(file: String) -> Vec<Token> {
             continue;
         };
     }
+    let mut multipunc_invalid = true;
     while let Some(ch) = chars.next() {
         right += 1;
         col += 1;
@@ -228,18 +229,28 @@ pub fn tokenize(file: String) -> Vec<Token> {
         }
 
         if whitespace.contains(&ch) {
+            multipunc_invalid = true;
             flush_token!();
         } else if punctuation.contains(&ch) {
-            let lastpunc = tokens.last().unwrap_or(&nopunc_tok);
-            let filtered = multi_puncs
-                .iter()
-                .filter(
-                    |x|
-                        x.starts_with(&lastpunc.content) &&
-                        x.chars().nth(lastpunc.content.len()) == Some(ch)
-                )
-                .collect::<Vec<_>>();
-            if filtered.len() > 0 {
+            let lastpunc;
+            let filtered;
+            let deftok = Token::default();
+            if !multipunc_invalid {
+                lastpunc = tokens.last().unwrap_or(&nopunc_tok);
+                filtered = multi_puncs
+                    .iter()
+                    .filter(
+                        |x|
+                            x.starts_with(&lastpunc.content) &&
+                            x.chars().nth(lastpunc.content.len()) == Some(ch)
+                    )
+                    .collect::<Vec<_>>();
+            }
+            else {
+                filtered = Vec::<_>::new();
+                lastpunc = &deftok;
+            }
+            if !multipunc_invalid && filtered.len() > 0 {
                 let new_token = Token {
                     line,
                     col: match (col < 0, col > u64::MAX as i128) {
@@ -266,6 +277,10 @@ pub fn tokenize(file: String) -> Vec<Token> {
                     ..Default::default()
                 });
             }
+            multipunc_invalid = false;
+        }
+        else {
+            multipunc_invalid = true;
         }
         cont!();
     }
