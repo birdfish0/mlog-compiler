@@ -2,7 +2,7 @@ use std::fmt::Display;
 use std::io::ErrorKind;
 use std::{ collections::HashMap };
 use std::fs::read_to_string;
-use crate::tokenize::{StringType, Token};
+use crate::tokenize::{ StringType, Token };
 use crate::*;
 
 #[derive(Debug)]
@@ -36,7 +36,7 @@ struct Val {
 
 impl Default for Val {
     fn default() -> Self {
-        Val { t: ValType::Nop, vt: VarType::Nop, ident: None, left: None, right: None, args: None, }
+        Val { t: ValType::Nop, vt: VarType::Nop, ident: None, left: None, right: None, args: None }
     }
 }
 
@@ -53,13 +53,23 @@ impl Display for Val {
                     }
                     outstr = outstr.strip_suffix(", ").unwrap_or_default().to_string();
                     write!(f, "<CodeBlock [{}]>", outstr)
-                }
-                else {
+                } else {
                     write!(f, "<CodeBlock [INVALID]>")
                 }
             }
-            ValType::Ident => write!(f, "<Ident \"{}\">", self.ident.as_ref().unwrap_or(&"<UNKNOWN>".to_string())),
-            ValType::Const => write!(f, "<Const \"{}\" ({:?})>", self.ident.as_ref().unwrap_or(&"<UNKNOWN>".to_string()), self.vt),
+            ValType::Ident =>
+                write!(
+                    f,
+                    "<Ident \"{}\">",
+                    self.ident.as_ref().unwrap_or(&"<UNKNOWN>".to_string())
+                ),
+            ValType::Const =>
+                write!(
+                    f,
+                    "<Const \"{}\" ({:?})>",
+                    self.ident.as_ref().unwrap_or(&"<UNKNOWN>".to_string()),
+                    self.vt
+                ),
             ValType::MacroCall | ValType::FuncCall => {
                 if let Some(args) = &self.args {
                     let mut outstr = "".to_string();
@@ -68,15 +78,20 @@ impl Display for Val {
                         outstr += ", ";
                     }
                     outstr = outstr.strip_suffix(", ").unwrap_or_default().to_string();
-                    write!(f, "<{:?} {}([{}])>",
-                            self.t,
-                            self.ident.as_ref().unwrap_or(&"<UNKNOWN>".to_string()),
-                            outstr)
-                }
-                else {
-                    write!(f, "<{:?} {}([INVALID])>",
-                            self.t,
-                            self.ident.as_ref().unwrap_or(&"<UNKNOWN>".to_string()))
+                    write!(
+                        f,
+                        "<{:?} {}([{}])>",
+                        self.t,
+                        self.ident.as_ref().unwrap_or(&"<UNKNOWN>".to_string()),
+                        outstr
+                    )
+                } else {
+                    write!(
+                        f,
+                        "<{:?} {}([INVALID])>",
+                        self.t,
+                        self.ident.as_ref().unwrap_or(&"<UNKNOWN>".to_string())
+                    )
                 }
             }
         }
@@ -104,10 +119,14 @@ fn is_num(s: &String) -> bool {
             ecount += 1;
         }
         return ecount <= 1 && numerics.contains(&x);
-    })
+    });
 }
 
-fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) -> Result<Val, (String, ExitReason)> {
+fn parse_tokens(
+    tokens: &Vec<&Token>,
+    opts: &HashMap<String, String>,
+    depth: u64
+) -> Result<Val, (String, ExitReason)> {
     macro_rules! opts {
         () => {
             &opts
@@ -123,7 +142,11 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
 
     let nonestr = "None".to_string();
 
-    let mut cblock = Val { t: ValType::CodeBlock, args: Some(Vec::<Val>::new()), ..Default::default() };
+    let mut cblock = Val {
+        t: ValType::CodeBlock,
+        args: Some(Vec::<Val>::new()),
+        ..Default::default()
+    };
     let mut state = State::None;
     let mut val_wip = Val::default();
     let mut val_isnew = true;
@@ -140,12 +163,11 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
     }
 
     let mut first = true;
-    let mut i:usize = 0;
+    let mut i: usize = 0;
     loop {
         if !first {
             i += 1;
-        }
-        else {
+        } else {
             first = false;
         }
         if i >= tokens.len() {
@@ -167,39 +189,52 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
                             val_wip.t = ValType::Const;
                             val_wip.vt = match token.strtype {
                                 StringType::Char => VarType::Char,
-                                _ => VarType::Str
+                                _ => VarType::Str,
                             };
                             state = State::ParseRemainder;
-                        }
-                        else if is_num(&token.content) {
+                        } else if is_num(&token.content) {
                             val_wip.t = ValType::Const;
                             val_wip.vt = VarType::Num;
                             let def = &&Default::default();
-                            let maybe_dot = tokens.get(i+1).unwrap_or(def);
+                            let maybe_dot = tokens.get(i + 1).unwrap_or(def);
                             if maybe_dot.content == "." {
                                 if !token.content.contains("e") {
-                                    debug!("[Depth {}] Processing {} as decimal point.", depth, maybe_dot);
+                                    debug!(
+                                        "[Depth {}] Processing {} as decimal point.",
+                                        depth,
+                                        maybe_dot
+                                    );
                                     let def = &&Default::default();
-                                    let remainder = tokens.get(i+2).unwrap_or(def);
+                                    let remainder = tokens.get(i + 2).unwrap_or(def);
                                     let nextcont = &remainder.content;
                                     if is_num(&nextcont) {
-                                        debug!("[Depth {}] Processing {} as number remainder.", depth, remainder);
+                                        debug!(
+                                            "[Depth {}] Processing {} as number remainder.",
+                                            depth,
+                                            remainder
+                                        );
                                         let mut _discard = "".to_string();
                                         *val_wip.ident.as_mut().unwrap_or(&mut _discard) += ".";
-                                        *val_wip.ident.as_mut().unwrap_or(&mut _discard) += nextcont.as_str();
+                                        *val_wip.ident.as_mut().unwrap_or(&mut _discard) +=
+                                            nextcont.as_str();
                                         i += 2;
+                                    } else {
+                                        debug!(
+                                            "[Depth {}] Skipped {} as number remainder.",
+                                            depth,
+                                            remainder
+                                        );
                                     }
-                                    else {
-                                        debug!("[Depth {}] Skipped {} as number remainder.", depth, remainder);
-                                    }
-                                }
-                                else {
-                                    debug!("[Depth {}] Skipped {} as decimal point.", depth, maybe_dot);
+                                } else {
+                                    debug!(
+                                        "[Depth {}] Skipped {} as decimal point.",
+                                        depth,
+                                        maybe_dot
+                                    );
                                 }
                             }
                             state = State::ParseRemainder;
-                        }
-                        else {
+                        } else {
                             val_wip.t = ValType::Ident;
                             state = State::PrevIsIdentifier;
                         }
@@ -216,7 +251,7 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
                     }
                     "!" => {
                         let success;
-                        if let Some(next) = tokens.get(i+1) {
+                        if let Some(next) = tokens.get(i + 1) {
                             if next.content == "(" {
                                 success = true;
                                 val_wip.t = ValType::MacroCall;
@@ -231,7 +266,14 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
                             success = false;
                         }
                         if !success {
-                            return Err((format!("Expected '(' after macro call \"{}!\".{}", val_wip.ident.unwrap_or("None".to_string()), pos!(token)), ExitReason::CompileExpectedParenthesisAfterMacro));
+                            return Err((
+                                format!(
+                                    "Expected '(' after macro call \"{}!\".{}",
+                                    val_wip.ident.unwrap_or("None".to_string()),
+                                    pos!(token)
+                                ),
+                                ExitReason::CompileExpectedParenthesisAfterMacro,
+                            ));
                         }
                     }
                     _ => {
@@ -243,7 +285,10 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
                                     _ => "string ",
                                 },
                                 token.content,
-                                match val_wip.left { Some(x) => x.ident.unwrap_or(nonestr), None => nonestr},
+                                match val_wip.left {
+                                    Some(x) => x.ident.unwrap_or(nonestr),
+                                    None => nonestr,
+                                },
                                 pos!(token)
                             ),
                             ExitReason::CompileBadTokenAfterIdentifier,
@@ -287,8 +332,7 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
                         if parenthesis_depth == 1 {
                             flush_funcarg!();
                             buffer.clear();
-                        }
-                        else {
+                        } else {
                             buffer.push(token);
                         }
                     }
@@ -310,10 +354,7 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
         }
         if
             token.strtype == StringType::Char &&
-            !(
-                token.content.clone().char_indices().count() == 1 ||
-                token.content.starts_with("\\u")
-            )
+            !(token.content.clone().char_indices().count() == 1 || token.content.starts_with("\\u"))
         {
             return Err((
                 format!(
@@ -329,7 +370,7 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
     if !val_isnew {
         cblock.args.as_mut().unwrap().push(val_wip);
     }
-    if (!should_return_codeblock) && cblock.args.as_ref().unwrap().len() == 1 {
+    if !should_return_codeblock && cblock.args.as_ref().unwrap().len() == 1 {
         cblock = cblock.args.as_mut().unwrap().remove(0);
         debug!("[Depth {}] Returning Val of type {:?} instead of CodeBlock.", depth, cblock.t);
     }
@@ -358,10 +399,15 @@ pub fn compile(
         Ok(f) => f,
         Err(e) => {
             if e.kind() == ErrorKind::NotFound {
-                return Err((format!("File \"{}\" not found.", &args[2]), ExitReason::CompileFileNotFound));
-            }
-            else {
-                return Err((format!("Reading file \"{}\" failed. Error: {}", &args[2], e.kind()), ExitReason::CompileFileNotFound));
+                return Err((
+                    format!("File \"{}\" not found.", &args[2]),
+                    ExitReason::CompileFileNotFound,
+                ));
+            } else {
+                return Err((
+                    format!("Reading file \"{}\" failed. Error: {}", &args[2], e.kind()),
+                    ExitReason::CompileFileNotFound,
+                ));
             }
         }
     };
@@ -377,7 +423,9 @@ pub fn compile(
     info!("Parse tokens (first pass)");
     let root = match parse_tokens(&tokens.iter().collect(), opts, 0) {
         Ok(t) => t,
-        Err(e) => { return Err(e); }
+        Err(e) => {
+            return Err(e);
+        }
     };
     debug!("{}", root);
     return Ok(());
