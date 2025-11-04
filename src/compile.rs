@@ -114,12 +114,15 @@ fn is_num(s: &String) -> bool {
         return false;
     }
     let mut ecount = 0;
-    return s.chars().all(|x| {
-        if x == 'e' {
-            ecount += 1;
-        }
-        return ecount <= 1 && numerics.contains(&x);
-    });
+    #[allow(unused_parens)]
+    return (
+        s.chars().all(|x| {
+            if x == 'e' {
+                ecount += 1;
+            }
+            return ecount <= 1 && numerics.contains(&x);
+        }) && s.chars().last() != Some('e')
+    );
 }
 
 fn parse_tokens(
