@@ -126,7 +126,7 @@ pub fn tokenize(file: String) -> Vec<Token> {
     let mut strescape = false;
     let mut intok = false;
     let mut line = 1;
-    let mut col:i128 = -1;
+    let mut col: i128 = -1;
     macro_rules! flush_token {
         () => {
             if left != right - 1 {
@@ -195,11 +195,11 @@ pub fn tokenize(file: String) -> Vec<Token> {
                     tokens.push(Token {
                         content: macro_str,
                         line,
-                        col: match (col < 0, col > u64::MAX as i128) {
-                                (true, _) => 0,
-                                (_, true) => u64::MAX,
-                                _ => col as u64
-                            },
+                        col: match (col < 0, col > (u64::MAX as i128)) {
+                            (true, _) => 0,
+                            (_, true) => u64::MAX,
+                            _ => col as u64,
+                        },
                         strtype: match ch {
                             '\'' => StringType::Char,
                             '\"' => StringType::String,
@@ -245,19 +245,18 @@ pub fn tokenize(file: String) -> Vec<Token> {
                             x.chars().nth(lastpunc.content.len()) == Some(ch)
                     )
                     .collect::<Vec<_>>();
-            }
-            else {
+            } else {
                 filtered = Vec::<_>::new();
                 lastpunc = &deftok;
             }
             if !multipunc_invalid && filtered.len() > 0 {
                 let new_token = Token {
                     line,
-                    col: match (col < 0, col > u64::MAX as i128) {
-                            (true, _) => 0,
-                            (_, true) => u64::MAX,
-                            _ => col as u64
-                        },
+                    col: match (col < 0, col > (u64::MAX as i128)) {
+                        (true, _) => 0,
+                        (_, true) => u64::MAX,
+                        _ => col as u64,
+                    },
                     content: lastpunc.content.clone() + ch.to_string().as_str(),
                     ..Default::default()
                 };
@@ -269,17 +268,16 @@ pub fn tokenize(file: String) -> Vec<Token> {
                 tokens.push(Token {
                     content: ch.to_string(),
                     line,
-                    col: match (col+1 < 0, col+1 > u64::MAX as i128) {
-                                (true, _) => 0,
-                                (_, true) => u64::MAX,
-                                _ => (col+1) as u64
-                            },
+                    col: match (col + 1 < 0, col + 1 > (u64::MAX as i128)) {
+                        (true, _) => 0,
+                        (_, true) => u64::MAX,
+                        _ => (col + 1) as u64,
+                    },
                     ..Default::default()
                 });
             }
             multipunc_invalid = false;
-        }
-        else {
+        } else {
             multipunc_invalid = true;
         }
         cont!();

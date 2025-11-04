@@ -81,7 +81,12 @@ fn main() -> Result<(), String> {
         for sflag in sflags_set {
             if vflag.0 && sflag.0 {
                 println!("Incompatible log level flags --{} and --{}.", vflag.1, sflag.1);
-                unwrap!(Err((format!("Incompatible log level flags --{} and --{}.", vflag.1, sflag.1), ExitReason::IncompatibleLogLevelFlags)));
+                unwrap!(
+                    Err((
+                        format!("Incompatible log level flags --{} and --{}.", vflag.1, sflag.1),
+                        ExitReason::IncompatibleLogLevelFlags,
+                    ))
+                );
             }
         }
     }
