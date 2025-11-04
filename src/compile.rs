@@ -288,10 +288,7 @@ fn parse_tokens(
                                     _ => "string ",
                                 },
                                 token.content,
-                                match val_wip.left {
-                                    Some(x) => x.ident.unwrap_or(nonestr),
-                                    None => nonestr,
-                                },
+                                val_wip.ident.unwrap_or(nonestr),
                                 pos!(token)
                             ),
                             ExitReason::CompileBadTokenAfterIdentifier,
