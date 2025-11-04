@@ -322,11 +322,15 @@ fn parse_tokens(
                 match token.content.as_str() {
                     "(" => {
                         parenthesis_depth += 1;
-                        buffer.push(token);
+                        if parenthesis_depth > 1 {
+                            buffer.push(token);
+                        }
                     }
                     ")" => {
                         parenthesis_depth -= 1;
-                        buffer.push(token);
+                        if parenthesis_depth > 1 {
+                            buffer.push(token);
+                        }
                     }
                     "," => {
                         if parenthesis_depth == 1 {
