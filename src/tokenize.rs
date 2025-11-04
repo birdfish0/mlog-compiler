@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+#[derive(Debug)]
 #[derive(PartialEq)]
 pub enum StringType {
     Not,
@@ -8,6 +9,7 @@ pub enum StringType {
     Backtick,
 }
 
+#[derive(Debug)]
 pub struct Token {
     pub content: String,
     pub line: u64,
