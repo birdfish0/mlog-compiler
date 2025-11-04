@@ -277,9 +277,11 @@ fn parse_tokens(tokens:&Vec<&Token>, opts:&HashMap<String, String>, depth: u64) 
                 match token.content.as_str() {
                     "(" => {
                         parenthesis_depth += 1;
+                        buffer.push(token);
                     }
                     ")" => {
                         parenthesis_depth -= 1;
+                        buffer.push(token);
                     }
                     "," => {
                         if parenthesis_depth == 1 {
