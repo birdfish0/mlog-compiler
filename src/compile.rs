@@ -48,17 +48,39 @@ impl Display for Val {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.t {
             ValType::Nop => write!(f, "<Nop>"),
-            ValType::CodeBlock => {
+            ValType::CodeBlock | ValType::FuncCall | ValType::MacroCall => {
                 if let Some(args) = &self.args {
                     let mut outstr = "".to_string();
                     for arg in args {
-                        outstr += format!("{}", arg).as_str();
-                        outstr += ", ";
+                        let tostr = format!("{}", arg);
+                        let mut out = "".to_string();
+                        for line in tostr.split("\n") {
+                            out += &("    ".to_string() + line + "\n");
+                        }
+                        out = out.strip_suffix("\n").unwrap_or(&out).to_owned();
+                        outstr += out.as_str();
+                        outstr += ",\n";
                     }
-                    outstr = outstr.strip_suffix(", ").unwrap_or_default().to_string();
-                    write!(f, "<CodeBlock [{}]>", outstr)
+                    outstr = outstr.strip_suffix(",\n").unwrap_or_default().to_string();
+                    write!(
+                        f,
+                        "<{:?}{} [\n{}\n]>",
+                        self.t,
+                        if self.t == ValType::CodeBlock {
+                            "".to_string()
+                        } else {
+                            let invalidstr = &"INVALID".to_string();
+                            " ".to_string() + self.ident.as_ref().unwrap_or(invalidstr)
+                        },
+                        outstr
+                    )
                 } else {
-                    write!(f, "<CodeBlock [INVALID]>")
+                    write!(f, "<{:?}{} [INVALID]>", self.t, if self.t == ValType::CodeBlock {
+                        "".to_string()
+                    } else {
+                        let invalidstr = &"INVALID".to_string();
+                        " ".to_string() + self.ident.as_ref().unwrap_or(invalidstr)
+                    })
                 }
             }
             ValType::Ident =>
@@ -74,30 +96,6 @@ impl Display for Val {
                     self.ident.as_ref().unwrap_or(&"<UNKNOWN>".to_string()),
                     self.vt
                 ),
-            ValType::MacroCall | ValType::FuncCall => {
-                if let Some(args) = &self.args {
-                    let mut outstr = "".to_string();
-                    for arg in args {
-                        outstr += format!("{}", arg).as_str();
-                        outstr += ", ";
-                    }
-                    outstr = outstr.strip_suffix(", ").unwrap_or_default().to_string();
-                    write!(
-                        f,
-                        "<{:?} {}([{}])>",
-                        self.t,
-                        self.ident.as_ref().unwrap_or(&"<UNKNOWN>".to_string()),
-                        outstr
-                    )
-                } else {
-                    write!(
-                        f,
-                        "<{:?} {}([INVALID])>",
-                        self.t,
-                        self.ident.as_ref().unwrap_or(&"<UNKNOWN>".to_string())
-                    )
-                }
-            }
         }
     }
 }
