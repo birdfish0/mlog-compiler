@@ -6,6 +6,8 @@ use crate::tokenize::{ StringType, Token };
 use crate::*;
 
 #[derive(Debug)]
+#[derive(PartialEq, Eq)]
+#[derive(Clone)]
 enum ValType {
     Nop,
     Ident,
@@ -17,6 +19,7 @@ enum ValType {
 
 #[derive(Debug)]
 #[derive(PartialEq, Eq)]
+#[derive(Clone)]
 enum VarType {
     Nop,
     Str,
@@ -25,6 +28,7 @@ enum VarType {
 }
 
 #[derive(Debug)]
+#[derive(Clone)]
 struct Val {
     pub t: ValType,
     pub vt: VarType,
@@ -98,14 +102,33 @@ impl Display for Val {
     }
 }
 
+#[derive(PartialEq, Eq)]
 enum State {
     None,
     PrevIsIdentifier,
     ParseRemainder,
     ParseArgs,
+    NegativeNum,
 }
 
 fn is_num(s: &String) -> bool {
+    return is_num_ignore_trailing_e(s) && s.chars().last() != Some('e');
+}
+
+fn is_num_no_e(s: &String) -> bool {
+    let numerics = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    if s.len() == 0 {
+        return false;
+    }
+    if !s.is_ascii() {
+        return false;
+    }
+    return s.chars().all(|x| {
+        return numerics.contains(&x);
+    });
+}
+
+fn is_num_ignore_trailing_e(s: &String) -> bool {
     let numerics = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'e'];
     if s.len() == 0 {
         return false;
@@ -114,15 +137,12 @@ fn is_num(s: &String) -> bool {
         return false;
     }
     let mut ecount = 0;
-    #[allow(unused_parens)]
-    return (
-        s.chars().all(|x| {
-            if x == 'e' {
-                ecount += 1;
-            }
-            return ecount <= 1 && numerics.contains(&x);
-        }) && s.chars().last() != Some('e')
-    );
+    return s.chars().all(|x| {
+        if x == 'e' {
+            ecount += 1;
+        }
+        return ecount <= 1 && numerics.contains(&x);
+    });
 }
 
 fn parse_tokens(
@@ -178,16 +198,29 @@ fn parse_tokens(
         }
         let token = tokens[i];
         debug!("[Depth {}] Processing {}.", depth, token);
+        let def = &&Default::default();
         match state {
-            State::None => {
+            State::None | State::NegativeNum => {
                 match token.content.as_str() {
                     ";" => {
                         flush!();
                         should_return_codeblock = true;
                     }
+                    "-" => {
+                        if is_num(&tokens.get(i + 1).unwrap_or(def).content) {
+                            state = State::NegativeNum;
+                        } else if
+                            is_num_ignore_trailing_e(&tokens.get(i + 1).unwrap_or(def).content) &&
+                            tokens.get(i + 2).unwrap_or(def).content == "-" &&
+                            is_num(&tokens.get(i + 3).unwrap_or(def).content)
+                        {
+                            state = State::NegativeNum;
+                        }
+                    }
                     _ => {
                         val_isnew = false;
                         val_wip = Val { ident: Some(token.content.clone()), ..Default::default() };
+                        let after = &tokens.get(i + 2).unwrap_or(def).content;
                         if token.strtype != StringType::Not {
                             val_wip.t = ValType::Const;
                             val_wip.vt = match token.strtype {
@@ -196,9 +229,15 @@ fn parse_tokens(
                             };
                             state = State::ParseRemainder;
                         } else if is_num(&token.content) {
+                            // POS or NEG with POS exponent
+
                             val_wip.t = ValType::Const;
                             val_wip.vt = VarType::Num;
-                            let def = &&Default::default();
+                            if state == State::NegativeNum {
+                                *(val_wip.ident.as_mut().unwrap(/* safe unwrap */)) =
+                                    "-".to_owned() +
+                                    val_wip.ident.clone().unwrap(/* safe unwrap */).as_str();
+                            }
                             let maybe_dot = tokens.get(i + 1).unwrap_or(def);
                             if maybe_dot.content == "." {
                                 if !token.content.contains("e") {
@@ -207,7 +246,6 @@ fn parse_tokens(
                                         depth,
                                         maybe_dot
                                     );
-                                    let def = &&Default::default();
                                     let exponent = tokens.get(i + 2).unwrap_or(def);
                                     let nextcont = &exponent.content;
                                     if is_num(&nextcont) {
@@ -235,6 +273,26 @@ fn parse_tokens(
                                         maybe_dot
                                     );
                                 }
+                            }
+                            state = State::ParseRemainder;
+                        } else if
+                            is_num_ignore_trailing_e(&token.content) &&
+                            tokens.get(i + 1).unwrap_or(&&Default::default()).content == "-" &&
+                            is_num_no_e(&after)
+                        {
+                            // POS or NEG with NEG exponent
+                            val_wip.t = ValType::Const;
+                            val_wip.vt = VarType::Num;
+                            if state == State::NegativeNum {
+                                *(val_wip.ident.as_mut().unwrap(/* safe unwrap */)) =
+                                    "-".to_owned() +
+                                    val_wip.ident.clone().unwrap(/* safe unwrap */).as_str() +
+                                    "-" +
+                                    after;
+                            } else {
+                                *(val_wip.ident.as_mut().unwrap(/* safe unwrap */)) += &(
+                                    "-".to_string() + after
+                                );
                             }
                             state = State::ParseRemainder;
                         } else {
