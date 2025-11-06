@@ -327,10 +327,10 @@ fn parse_tokens(
                         }
                     }
                     ")" => {
-                        parenthesis_depth -= 1;
                         if parenthesis_depth > 1 {
                             buffer.push(token);
                         }
+                        parenthesis_depth -= 1;
                     }
                     "," => {
                         if parenthesis_depth == 1 {
