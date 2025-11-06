@@ -208,13 +208,13 @@ fn parse_tokens(
                                         maybe_dot
                                     );
                                     let def = &&Default::default();
-                                    let remainder = tokens.get(i + 2).unwrap_or(def);
-                                    let nextcont = &remainder.content;
+                                    let exponent = tokens.get(i + 2).unwrap_or(def);
+                                    let nextcont = &exponent.content;
                                     if is_num(&nextcont) {
                                         debug!(
-                                            "[Depth {}] Processing {} as number remainder.",
+                                            "[Depth {}] Processing {} as exponent.",
                                             depth,
-                                            remainder
+                                            exponent
                                         );
                                         let mut _discard = "".to_string();
                                         *val_wip.ident.as_mut().unwrap_or(&mut _discard) += ".";
@@ -223,9 +223,9 @@ fn parse_tokens(
                                         i += 2;
                                     } else {
                                         debug!(
-                                            "[Depth {}] Skipped {} as number remainder.",
+                                            "[Depth {}] Skipped {} as exponent.",
                                             depth,
-                                            remainder
+                                            exponent
                                         );
                                     }
                                 } else {
