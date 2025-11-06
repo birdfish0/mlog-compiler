@@ -295,6 +295,11 @@ fn parse_tokens(
                                 );
                             }
                             state = State::ParseRemainder;
+                        } else if is_num_ignore_trailing_e(&token.content) {
+                            cwarn!(
+                                "Identifier starting with a number and ending in 'e'{}. Did you mean to provide an exponent (\"5e2\")?",
+                                pos!(token)
+                            );
                         } else {
                             val_wip.t = ValType::Ident;
                             state = State::PrevIsIdentifier;
