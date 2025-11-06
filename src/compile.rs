@@ -219,12 +219,41 @@ fn parse_tokens(
                         val_isnew = false;
                         val_wip = Val { ident: Some(token.content.clone()), ..Default::default() };
                         let after = &tokens.get(i + 2).unwrap_or(def).content;
+                        let after_dec = &tokens.get(i + 4).unwrap_or(def).content;
                         if token.strtype != StringType::Not {
                             val_wip.t = ValType::Const;
                             val_wip.vt = match token.strtype {
                                 StringType::Char => VarType::Char,
                                 _ => VarType::Str,
                             };
+                            state = State::ParseRemainder;
+                        } else if
+                            is_num_no_e(&token.content) &&
+                            tokens.get(i + 1).unwrap_or(&&Default::default()).content == "." &&
+                            !is_num(&after) &&
+                            is_num_ignore_trailing_e(&after) &&
+                            tokens.get(i + 3).unwrap_or(&&Default::default()).content == "-" &&
+                            is_num_no_e(after_dec)
+                        {
+                            // POS or NEG for DECIMAL with NEG exponent
+                            val_wip.t = ValType::Const;
+                            val_wip.vt = VarType::Num;
+                            if state == State::NegativeNum {
+                                *(val_wip.ident.as_mut().unwrap(/* safe unwrap */)) =
+                                    "-".to_owned() +
+                                    val_wip.ident.clone().unwrap(/* safe unwrap */).as_str() +
+                                    "." +
+                                    after +
+                                    "-" +
+                                    after_dec;
+                            } else {
+                                *(val_wip.ident.as_mut().unwrap(/* safe unwrap */)) += &(
+                                    ".".to_string() +
+                                    after +
+                                    "-" +
+                                    after_dec
+                                );
+                            }
                             state = State::ParseRemainder;
                         } else if is_num(&token.content) {
                             // POS or NEG with POS exponent
@@ -271,6 +300,46 @@ fn parse_tokens(
                                         maybe_dot
                                     );
                                 }
+                            }
+                            state = State::ParseRemainder;
+                        } else if
+                            is_num_ignore_trailing_e(&token.content) &&
+                            tokens.get(i + 1).unwrap_or(&&Default::default()).content == "-" &&
+                            is_num_no_e(&after)
+                        {
+                            // POS or NEG with NEG exponent
+                            val_wip.t = ValType::Const;
+                            val_wip.vt = VarType::Num;
+                            if state == State::NegativeNum {
+                                *(val_wip.ident.as_mut().unwrap(/* safe unwrap */)) =
+                                    "-".to_owned() +
+                                    val_wip.ident.clone().unwrap(/* safe unwrap */).as_str() +
+                                    "-" +
+                                    after;
+                            } else {
+                                *(val_wip.ident.as_mut().unwrap(/* safe unwrap */)) += &(
+                                    "-".to_string() + after
+                                );
+                            }
+                            state = State::ParseRemainder;
+                        } else if
+                            is_num_ignore_trailing_e(&token.content) &&
+                            tokens.get(i + 1).unwrap_or(&&Default::default()).content == "-" &&
+                            is_num_no_e(&after)
+                        {
+                            // POS or NEG with NEG exponent
+                            val_wip.t = ValType::Const;
+                            val_wip.vt = VarType::Num;
+                            if state == State::NegativeNum {
+                                *(val_wip.ident.as_mut().unwrap(/* safe unwrap */)) =
+                                    "-".to_owned() +
+                                    val_wip.ident.clone().unwrap(/* safe unwrap */).as_str() +
+                                    "-" +
+                                    after;
+                            } else {
+                                *(val_wip.ident.as_mut().unwrap(/* safe unwrap */)) += &(
+                                    "-".to_string() + after
+                                );
                             }
                             state = State::ParseRemainder;
                         } else if
