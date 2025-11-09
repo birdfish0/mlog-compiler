@@ -1,5 +1,6 @@
 pub const ESCAPE: char = '\x1b';
 
+#[cfg(not(test))]
 #[macro_export]
 macro_rules! log {
     (
@@ -22,6 +23,7 @@ macro_rules! log {
     };
 }
 
+#[cfg(not(test))]
 #[macro_export]
 macro_rules! debug {
     ($($params:tt)*) => {
@@ -31,6 +33,7 @@ macro_rules! debug {
     };
 }
 
+#[cfg(not(test))]
 #[macro_export]
 macro_rules! info {
     ($($params:tt)*) => {
@@ -40,6 +43,7 @@ macro_rules! info {
     };
 }
 
+#[cfg(not(test))]
 #[macro_export]
 macro_rules! ok {
     ($($params:tt)*) => {
@@ -49,6 +53,7 @@ macro_rules! ok {
     };
 }
 
+#[cfg(not(test))]
 #[macro_export]
 macro_rules! cwarn {
     ($($params:tt)*) => {
@@ -58,6 +63,7 @@ macro_rules! cwarn {
     };
 }
 
+#[cfg(not(test))]
 #[macro_export]
 macro_rules! warn {
     ($($params:tt)*) => {
@@ -67,6 +73,76 @@ macro_rules! warn {
     };
 }
 
+#[cfg(not(test))]
+#[macro_export]
+macro_rules! err {
+    ($($params:tt)*) => {
+        log!("[1;31m", "ERROR", $($params)*);
+    };
+}
+
+#[cfg(test)]
+#[macro_export]
+macro_rules! log {
+    (
+        $color:expr,
+        $decoration:expr,
+        $($params:tt)*
+    ) => {
+        let e_logger_msg = format!("{}", format!($($params)*));
+        if (e_logger_msg.contains("\n")) {
+            for e_logger_line in e_logger_msg.split("\n") {
+                let e_logger_line = e_logger_line.strip_prefix("\r").unwrap_or(e_logger_line);
+                println!("[{}{} {} {}[0m]: {}", crate::logging::ESCAPE, $color, $decoration, crate::logging::ESCAPE, e_logger_line);
+            }
+        }
+        else {
+            println!("[{}{} {} {}[0m]: {}", crate::logging::ESCAPE, $color, $decoration, crate::logging::ESCAPE, e_logger_msg);
+        }
+    };
+}
+
+#[cfg(test)]
+#[macro_export]
+macro_rules! debug {
+    ($($params:tt)*) => {
+        log!("[1;35m", "DEBUG", $($params)*);
+    };
+}
+
+#[cfg(test)]
+#[macro_export]
+macro_rules! info {
+    ($($params:tt)*) => {
+        log!("[1;36m", "INFO", $($params)*);
+    };
+}
+
+#[cfg(test)]
+#[macro_export]
+macro_rules! ok {
+    ($($params:tt)*) => {
+        log!("[1;32m", "OK", $($params)*);
+    };
+}
+
+#[cfg(test)]
+#[macro_export]
+macro_rules! cwarn {
+    ($($params:tt)*) => {
+        log!("[1;33m", "WARN", $($params)*);
+    };
+}
+
+#[cfg(test)]
+#[macro_export]
+macro_rules! warn {
+    ($($params:tt)*) => {
+        log!("[1;33m", "WARN", $($params)*);
+    };
+}
+
+#[cfg(test)]
 #[macro_export]
 macro_rules! err {
     ($($params:tt)*) => {
