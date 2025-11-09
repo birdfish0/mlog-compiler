@@ -262,6 +262,7 @@ fn parse_tokens(
                                 );
                             }
                             state = State::ParseRemainder;
+                            i += 4;
                         } else if is_num(&token.content) {
                             // POS or NEG with POS exponent
 
@@ -368,6 +369,7 @@ fn parse_tokens(
                                     "-".to_string() + after
                                 );
                             }
+                            i += 2;
                             state = State::ParseRemainder;
                         } else {
                             val_wip.t = ValType::Ident;
