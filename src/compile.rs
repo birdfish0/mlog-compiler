@@ -329,46 +329,6 @@ fn parse_tokens(
                                     "-".to_string() + after
                                 );
                             }
-                            state = State::ParseRemainder;
-                        } else if
-                            is_num_ignore_trailing_e(&token.content) &&
-                            tokens.get(i + 1).unwrap_or(&&Default::default()).content == "-" &&
-                            is_num_no_e(&after)
-                        {
-                            // POS or NEG with NEG exponent
-                            val_wip.t = ValType::Const;
-                            val_wip.vt = VarType::Num;
-                            if state == State::NegativeNum {
-                                *(val_wip.ident.as_mut().unwrap(/* safe unwrap */)) =
-                                    "-".to_owned() +
-                                    val_wip.ident.clone().unwrap(/* safe unwrap */).as_str() +
-                                    "-" +
-                                    after;
-                            } else {
-                                *(val_wip.ident.as_mut().unwrap(/* safe unwrap */)) += &(
-                                    "-".to_string() + after
-                                );
-                            }
-                            state = State::ParseRemainder;
-                        } else if
-                            is_num_ignore_trailing_e(&token.content) &&
-                            tokens.get(i + 1).unwrap_or(&&Default::default()).content == "-" &&
-                            is_num_no_e(&after)
-                        {
-                            // POS or NEG with NEG exponent
-                            val_wip.t = ValType::Const;
-                            val_wip.vt = VarType::Num;
-                            if state == State::NegativeNum {
-                                *(val_wip.ident.as_mut().unwrap(/* safe unwrap */)) =
-                                    "-".to_owned() +
-                                    val_wip.ident.clone().unwrap(/* safe unwrap */).as_str() +
-                                    "-" +
-                                    after;
-                            } else {
-                                *(val_wip.ident.as_mut().unwrap(/* safe unwrap */)) += &(
-                                    "-".to_string() + after
-                                );
-                            }
                             i += 2;
                             state = State::ParseRemainder;
                         } else {
