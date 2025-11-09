@@ -143,6 +143,13 @@ fn is_num_ignore_trailing_e(s: &String) -> bool {
     });
 }
 
+fn is_unicode_char(ch: &String) -> bool {
+    if !ch.starts_with("\\u+") || !ch.is_ascii() {
+        return false;
+    }
+    return is_num_no_e(&ch.split_at(3).1.to_string());
+}
+
 fn parse_tokens(
     tokens: &Vec<&Token>,
     opts: &HashMap<String, String>,
@@ -490,7 +497,7 @@ fn parse_tokens(
         }
         if
             token.strtype == StringType::Char &&
-            !(token.content.clone().char_indices().count() == 1 || token.content.starts_with("\\u"))
+            !(token.content.clone().char_indices().count() == 1 || is_unicode_char(&token.content))
         {
             return Err((
                 format!(
