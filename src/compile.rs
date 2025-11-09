@@ -8,7 +8,7 @@ use crate::*;
 #[derive(Debug)]
 #[derive(PartialEq, Eq)]
 #[derive(Clone)]
-enum ValType {
+pub enum ValType {
     Nop,
     Ident,
     Const,
@@ -20,7 +20,7 @@ enum ValType {
 #[derive(Debug)]
 #[derive(PartialEq, Eq)]
 #[derive(Clone)]
-enum VarType {
+pub enum VarType {
     Nop,
     Str,
     Char,
@@ -29,7 +29,8 @@ enum VarType {
 
 #[derive(Debug)]
 #[derive(Clone)]
-struct Val {
+#[derive(PartialEq, Eq)]
+pub struct Val {
     pub t: ValType,
     pub vt: VarType,
     pub ident: Option<String>,
@@ -150,7 +151,7 @@ fn is_unicode_char(ch: &String) -> bool {
     return is_num_no_e(&ch.split_at(3).1.to_string());
 }
 
-fn parse_tokens(
+pub fn parse_tokens(
     tokens: &Vec<&Token>,
     opts: &HashMap<String, String>,
     depth: u64

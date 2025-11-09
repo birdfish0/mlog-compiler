@@ -10,6 +10,7 @@ mod commands;
 mod tokenize;
 mod compile;
 mod logging;
+mod tests;
 
 use argparse::{ parse_args, flag_set };
 use help::default_help_msg;
